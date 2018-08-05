@@ -1,0 +1,71 @@
+#include <LiquidCrystal.h>
+LiquidCrystal lcd(7, 6, 5, 4, 3, 2);
+const int PIR = 12;
+const int bulb = 13;
+const int tempPin = A1;
+const int fan = 11;
+char data = 0;
+int temp;
+int tempMin = 30;
+int tempMax = 60;
+int fanSpeed;
+int fanLCD;
+int pirState = 0;
+
+void setup() {
+  pinMode(PIR, INPUT);
+  pinMode(bulb, OUTPUT);
+  pinMode(fan, OUTPUT);
+  pinMode(tempPin, INPUT);
+  lcd.begin(16, 2);
+  Serial.begin(9600);
+}
+
+void loop() {
+  if (Serial.available() > 0)
+  {
+    data = Serial.read();
+    Serial.print(data);
+    Serial.print("\n");
+  }
+  pirState = digitalRead(PIR);
+  if ((pirState == HIGH) && (data == '1'))
+  {
+    digitalWrite(bulb, HIGH);
+    lcd.setCursor(0, 1);
+    lcd.print("Bulb ON");
+  }
+  if ((pirState == LOW) && (data == '0'))
+  {
+    digitalWrite(bulb, LOW);
+    lcd.print("Bulb OFF");
+  }
+  if
+  (temp = readTemp());
+  Serial.print( temp );
+  if (temp < tempMin)
+  {
+    fanSpeed = 0;
+    analogWrite(fan, fanSpeed);
+    fanLCD = 0;
+    digitalWrite(fan, LOW);
+  }
+  if ((temp >= tempMin) && (temp <= tempMax))
+  {
+    fanSpeed = temp;
+    fanSpeed = 1.5 * fanSpeed;
+    fanLCD = map(temp, tempMin, tempMax, 0, 100);
+    analogWrite(fan, fanSpeed);
+    lcd.setCursor(0, 0);
+    lcd.print("TEMP: ");
+    lcd.print(temp);
+    lcd.print("C ");
+    delay(200);
+    lcd.clear();
+    }
+}
+
+int readTemp() {
+  temp = analogRead(tempPin);
+  return temp * 0.48828125;
+}
